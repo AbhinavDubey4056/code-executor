@@ -137,10 +137,15 @@ async function runPython(code, stdin) {
         }
       );
 
-      if (stdin) {
-        childProc.stdin.write(stdin);
-      }
-      childProc.stdin.end();
+      // EPIPE fix
+      try {
+        if (stdin && stdin.trim().length > 0) {
+          childProc.stdin.write(stdin + '\n');
+        }
+        childProc.stdin.end();
+      } catch (stdinErr) {}
+
+      childProc.stdin.on('error', () => {});
 
     } catch (err) {
       try { fs.unlinkSync(filePath); } catch {}
